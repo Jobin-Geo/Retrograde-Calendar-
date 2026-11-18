@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#24134b">
+  <title>Gas Bill Calculator | Meter Readings to Cost</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink:#241937; --muted:#726985; --purple:#6334c4; --deep:#29154d;
+      --surface:#fff; --bg:#f7f5fb; --border:#e7e0f1; --wash:#f3edfe;
+      --shadow:0 20px 55px rgba(48,20,85,.085);
+    }
+    * {box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:15px;line-height:1.5}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .shell{width:min(1150px,calc(100% - 42px));margin:0 auto}
+    .topbar{background:#fff;border-bottom:1px solid var(--border)}
+    .nav{display:flex;align-items:center;justify-content:space-between;min-height:74px;gap:16px}
+    .logo{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.5px;font-size:19px}
+    .logo-icon{width:36px;height:36px;background:#6634ca;color:#fff;display:grid;place-items:center;border-radius:12px;font-size:19px}
+    .tag{font-size:12px;font-weight:700;color:#7046a7;background:#f4edfe;border:1px solid #e9d9ff;border-radius:99px;padding:7px 12px;white-space:nowrap}
+    main{padding:38px 0 55px}
+    .intro{margin-bottom:27px}
+    .eyebrow{text-transform:uppercase;letter-spacing:.15em;color:#7653b1;font-weight:800;font-size:11px;margin:0 0 8px}
+    h1{font-size:clamp(29px,4vw,43px);line-height:1.15;letter-spacing:-1.6px;margin:0 0 11px}
+    .intro p:last-child{color:var(--muted);font-size:16px;max-width:670px;margin:0}
+    .workspace{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(350px,.94fr);gap:23px;align-items:start}
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow)}
+    .form-panel{padding:27px}
+    .section-top{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:20px}
+    h2{font-size:19px;letter-spacing:-.5px;line-height:1.3;margin:0}
+    .sub{margin:5px 0 0;color:var(--muted);font-size:13px}
+    .small-button{color:var(--purple);background:#f7f2ff;border:1px solid #e9dcff;border-radius:10px;padding:8px 11px;font-size:12px;font-weight:700}
+    .small-button:hover{background:#eee3ff}
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px 15px}
+    label{display:block;color:#554866;font-weight:700;font-size:12px;margin-bottom:7px}
+    .input-wrap{position:relative}
+    input,select{display:block;width:100%;height:48px;border:1px solid #ded6e9;border-radius:12px;background:#fff;padding:0 14px;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+    input:focus,select:focus{border-color:#8155da;box-shadow:0 0 0 3px #ddccfa}
+    input[type="date"]{min-width:0;color-scheme:light}
+    input[type="number"]{font-variant-numeric:tabular-nums}
+    .suffix-field input{padding-right:82px}
+    .suffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#7d728b;font-size:12px;pointer-events:none}
+    .section-divider{border:none;border-top:1px solid #efeaf5;margin:27px 0 24px}
+    .full-width{grid-column:1/-1}
+    .helper{color:#8d839a;font-size:11px;line-height:1.4;margin-top:6px}
+    details.settings{margin-top:18px;border:1px solid var(--border);border-radius:13px;overflow:hidden}
+    details.settings summary{cursor:pointer;padding:13px 15px;color:#5b4088;font-weight:750;font-size:13px;background:#faf7ff;list-style-position:inside}
+    .details-inner{padding:16px;border-top:1px solid var(--border)}
+    .actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:22px}
+    .outline{border:1px solid #dacfe9;background:#fff;color:#4a366a;font-size:13px;font-weight:700;border-radius:10px;padding:10px 15px}
+    .outline:hover{background:#faf6ff}
+    .error{display:none;color:#a92e50;background:#fff2f5;border:1px solid #f2bdcb;padding:12px 14px;border-radius:11px;margin-top:17px;font-size:13px}
+    .error.show{display:block}
+    .results{display:grid;gap:19px}
+    .total-card{position:relative;overflow:hidden;background:linear-gradient(125deg,#2d1854 3%,#5a319f 70%,#7343c2);padding:28px;color:#fff;border-radius:22px;box-shadow:0 18px 48px rgba(77,33,124,.2)}
+    .total-card::after{content:"";position:absolute;width:280px;height:280px;border:1px solid rgba(255,255,255,.13);border-radius:50%;right:-135px;top:-120px;box-shadow:0 0 0 55px rgba(255,255,255,.035),0 0 0 110px rgba(255,255,255,.02)}
+    .total-title{position:relative;z-index:1;color:#e3d5ff;font-size:13px;font-weight:700;margin:0 0 7px}
+    .amount{position:relative;z-index:1;font-size:clamp(44px,5.5vw,64px);line-height:1.1;font-weight:800;letter-spacing:-2.8px;font-variant-numeric:tabular-nums;margin:0 0 12px}
+    .total-foot{position:relative;z-index:1;display:inline-flex;gap:7px;align-items:center;font-size:12px;color:#efe6ff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);padding:7px 11px;border-radius:50px}
+    .results-panel{padding:25px 26px}
+    .results-panel h2{margin-bottom:19px}
+    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:21px}
+    .stat{background:#f8f5fd;border-radius:12px;padding:14px 10px;text-align:center}
+    .stat-label{color:#8b7b9e;font-size:10px;letter-spacing:.02em;font-weight:700;display:block;line-height:1.3}
+    .stat strong{display:block;margin-top:5px;font-size:19px;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+    .stat small{color:#958aa6;font-size:10px}
+    .bill-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #f0edf4;font-size:13px}
+    .bill-row span:first-child{color:#6f637d}
+    .bill-row strong{font-size:14px;font-weight:750;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+    .bill-row:last-of-type{border-bottom:none}
+    .final-row{display:flex;align-items:center;justify-content:space-between;border-top:1.5px solid #dcd2e8;padding-top:16px;margin-top:6px;font-size:15px;font-weight:800}
+    .final-row strong{font-size:24px;letter-spacing:-.6px;font-variant-numeric:tabular-nums;color:#53239f}
+    .note{color:#7d718a;font-size:12px;line-height:1.6;margin:17px 0 0}
+    .sample-note{background:#f8f5fd;border:1px solid #ebe2f6;border-radius:11px;padding:12px 14px;font-size:12px;color:#756487;margin-top:17px}
+    .sample-note strong{color:#4a336e}
+    .about{margin-top:23px;background:transparent;border:1px solid var(--border);border-radius:16px;padding:20px 23px}
+    .about h3{font-size:15px;margin:0 0 8px}
+    .about p{font-size:13px;color:#70667c;margin:0 0 9px}
+    .about p:last-child{margin-bottom:0}
+    .formula{display:block;overflow-wrap:anywhere;background:#fff;border:1px solid var(--border);border-radius:9px;padding:11px 13px;font-size:13px;color:#48365d;margin:11px 0}
+    .footer{padding:0 0 30px;text-align:center;color:#9d93a7;font-size:12px}
+    @media(max-width:800px){.workspace{grid-template-columns:1fr}.results{grid-row:1}.amount{font-size:50px}}
+    @media(max-width:480px){.shell{width:calc(100% - 25px)}.nav{min-height:64px}.logo{font-size:16px}.tag{font-size:10px;padding:5px 8px}.form-panel,.results-panel{padding:20px}.total-card{padding:23px}.field-grid{gap:13px 11px}.stat{padding:11px 5px}.stat strong{font-size:16px}.amount{font-size:47px}.intro{margin-bottom:22px}main{padding-top:29px}input,select{padding-left:10px;padding-right:8px;font-size:14px}.suffix{right:8px}.suffix-field input{padding-right:72px}}
+    @media print{body{background:#fff}.shell{width:100%}.topbar{border:0}.workspace{display:grid;grid-template-columns:1fr 1fr;gap:15px}.form-panel,.results-panel,.total-card{box-shadow:none;break-inside:avoid}.total-card{-webkit-print-color-adjust:exact;print-color-adjust:exact}.small-button,.actions,.footer,.about{display:none}.form-panel{padding:19px}.results-panel{padding:20px}.intro{margin-bottom:18px}main{padding:10px 0}.tag{border:1px solid #bbb}.sample-note{display:none}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell nav">
+      <div class="logo"><span class="logo-icon" aria-hidden="true">⚡</span><span>Gas bill calculator</span></div>
+      <span class="tag">Flexible Octopus · UK gas</span>
+    </div>
+  </header>
+  <main class="shell">
+    <div class="intro">
+      <p class="eyebrow">Readings in. Total out.</p>
+      <h1>Know what your gas will cost.</h1>
+      <p>Enter the dates and two meter readings to instantly estimate your gas bill. Pre-filled with the charges from your October–November 2026 Octopus bill.</p>
+    </div>
+    <div class="workspace">
+      <section class="panel form-panel" aria-labelledby="inputsHeading">
+        <div class="section-top">
+          <div><h2 id="inputsHeading">Meter readings</h2><p class="sub">Enter the first and last reading in your period.</p></div>
+          <button type="button" class="small-button" id="exampleButton">Load bill example</button>
+        </div>
+        <div class="field-grid">
+          <div>
+            <label for="startDate">Start date</label>
+            <input id="startDate" type="date" value="2026-10-23" required>
+          </div>
+          <div>
+            <label for="endDate">End date</label>
+            <input id="endDate" type="date" value="2026-11-14" required>
+          </div>
+          <div>
+            <label for="startReading">Previous reading</label>
+            <input id="startReading" type="number" min="0" step="any" inputmode="decimal" value="3412" placeholder="e.g. 3412" required>
+          </div>
+          <div>
+            <label for="endReading">Current reading</label>
+            <input id="endReading" type="number" min="0" step="any" inputmode="decimal" value="3437" placeholder="e.g. 3437" required>
+          </div>
+          <div class="full-width">
+            <label for="meterType">Gas meter type</label>
+            <select id="meterType">
+              <option value="imperial">Imperial — units are hundreds of cubic feet (your bill)</option>
+              <option value="metric">Metric — units are cubic metres (m³)</option>
+            </select>
+            <div class="helper">Your uploaded bill uses an imperial meter. Select metric if your meter displays m³.</div>
+          </div>
+        </div>
+        <hr class="section-divider">
+        <div class="section-top"><div><h2>Tariff rates</h2><p class="sub">Edit these if your prices have changed.</p></div></div>
+        <div class="field-grid">
+          <div>
+            <label for="unitRate">Unit rate</label>
+            <div class="input-wrap suffix-field"><input id="unitRate" type="number" min="0" step="any" inputmode="decimal" value="8.08"><span class="suffix">p/kWh</span></div>
+          </div>
+          <div>
+            <label for="standingRate">Standing charge</label>
+            <div class="input-wrap suffix-field"><input id="standingRate" type="number" min="0" step="any" inputmode="decimal" value="31.27"><span class="suffix">p/day</span></div>
+          </div>
+          <div>
+            <label for="vatRate">VAT</label>
+            <div class="input-wrap suffix-field"><input id="vatRate" type="number" min="0" max="100" step="any" inputmode="decimal" value="5"><span class="suffix">%</span></div>
+          </div>
+          <div>
+            <label for="calorificValue">Calorific value</label>
+            <div class="input-wrap suffix-field"><input id="calorificValue" type="number" min="1" step="any" inputmode="decimal" value="39"><span class="suffix">MJ/m³</span></div>
+          </div>
+        </div>
+        <details class="settings">
+          <summary>Advanced conversion settings</summary>
+          <div class="details-inner">
+            <label for="volumeCorrection">Volume correction factor</label>
+            <input id="volumeCorrection" type="number" min="0.00001" step="any" inputmode="decimal" value="1.02264">
+            <p class="helper">The value on your bill is 1.02264. Imperial units are multiplied by 2.83 before this correction.</p>
+          </div>
+        </details>
+        <div id="error" class="error" role="alert" aria-live="polite"></div>
+        <div class="actions">
+          <button id="clearButton" class="outline" type="button">Clear readings</button>
+          <button id="printButton" class="outline" type="button">Print / Save as PDF</button>
+        </div>
+      </section>
+      <div class="results" aria-live="polite">
+        <section class="total-card" aria-labelledby="totalHeading">
+          <p class="total-title" id="totalHeading">Your estimated gas bill</p>
+          <p class="amount" id="totalAmount">£73.72</p>
+          <div class="total-foot" id="periodSummary">22 days · Including 5% VAT</div>
+        </section>
+        <section class="panel results-panel" aria-labelledby="breakdownHeading">
+          <h2 id="breakdownHeading">Your bill breakdown</h2>
+          <div class="stats">
+            <div class="stat"><span class="stat-label">Meter units</span><strong id="unitsUsed">25</strong><small id="unitsLabel">100s ft³</small></div>
+            <div class="stat"><span class="stat-label">Gas used</span><strong id="kwhUsed">783.8</strong><small>kWh</small></div>
+            <div class="stat"><span class="stat-label">Days billed</span><strong id="daysBilled">22</strong><small>days</small></div>
+          </div>
+          <div class="bill-row"><span>Gas usage <span id="unitRateDisplay">(8.08p/kWh)</span></span><strong id="energyCost">£63.33</strong></div>
+          <div class="bill-row"><span>Standing charge <span id="standingRateDisplay">(31.27p × 22 days)</span></span><strong id="standingCost">£6.88</strong></div>
+          <div class="bill-row"><span>Subtotal before VAT</span><strong id="subtotal">£70.21</strong></div>
+          <div class="bill-row"><span>VAT <span id="vatRateDisplay">(5%)</span></span><strong id="vatCost">£3.51</strong></div>
+          <div class="final-row"><span>Total estimated cost</span><strong id="totalBreakdown">£73.72</strong></div>
+          <div class="sample-note" id="billComparison"><strong>About the example:</strong> Your uploaded bill totals £73.68. The estimate using its displayed 8.08p rate is £73.72, a 4p difference. The bill may use a more precise underlying unit rate; entering 8.075p reproduces its total.</div>
+          <p class="note">This is an estimate, not a bill from Octopus Energy. For tariff changes during the period or precise billing adjustments, the actual amount may differ.</p>
+        </section>
+      </div>
+    </div>
+    <section class="about" aria-labelledby="howHeading">
+      <h3 id="howHeading">How the calculation works</h3>
+      <p>Gas usage is calculated from the difference between the two meter readings, converted into kilowatt-hours (kWh) using the conversion factors shown in your bill.</p>
+      <span class="formula" id="formula">Imperial kWh = units × 2.83 × 1.02264 × 39 ÷ 3.6</span>
+      <p>Energy charge = kWh × unit rate. Standing charge = number of days × daily standing rate. VAT is added to the combined amount. The number of days is the difference between dates; for example, 23 October to 14 November is 22 days. Monetary line items are rounded to pennies.</p>
+      <p><strong>Rates:</strong> Pre-filled from your uploaded Flexible Octopus bill (23 October–13 November 2026). Because it is a variable tariff, check rates for later periods.</p>
+    </section>
+  </main>
+  <footer class="shell footer">Personal gas cost estimator · Works offline in your browser · No data is sent or stored.</footer>
+  <script>
+    (function () {
+      'use strict';
+      const $ = (id) => document.getElementById(id);
+      const fieldIds = ['startDate','endDate','startReading','endReading','meterType','unitRate','standingRate','vatRate','calorificValue','volumeCorrection'];
+      const numberIds = ['startReading','endReading','unitRate','standingRate','vatRate','calorificValue','volumeCorrection'];
+      const example = {
+        startDate:'2026-10-23', endDate:'2026-11-14', startReading:'3412', endReading:'3437',
+        meterType:'imperial', unitRate:'8.08', standingRate:'31.27', vatRate:'5',
+        calorificValue:'39', volumeCorrection:'1.02264'
+      };
+      const money = (n) => new Intl.NumberFormat('en-GB', {style:'currency',currency:'GBP'}).format(n);
+      const numeric = (n, maxDecimals=1) => new Intl.NumberFormat('en-GB', { maximumFractionDigits:maxDecimals }).format(n);
+      const roundPence = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+      const show = (id, v) => { $(id).textContent = v; };
+      const validate = () => {
+        for(const id of ['startDate','endDate']) if (!$(id).value) return 'Please enter both dates.';
+        for(const id of numberIds) if ($(id).value.trim() === '' || !Number.isFinite(Number($(id).value))) return 'Please enter all readings and tariff values.';
+        const start = Date.parse($("startDate").value + 'T00:00:00Z');
+        const end = Date.parse($("endDate").value + 'T00:00:00Z');
+        if(!Number.isFinite(start) || !Number.isFinite(end)) return 'Please enter valid dates.';
+        if(end <= start) return 'The end date must be later than the start date.';
+        const previous = Number($('startReading').value), current = Number($('endReading').value);
+        if(previous < 0 || current < 0) return 'Meter readings cannot be negative.';
+        if(current < previous) return 'The current meter reading must be at least as large as the previous one. If your meter rolled over, split the period or adjust the readings.';
+        for (const id of ['unitRate','standingRate','vatRate']) if(Number($(id).value)<0) return 'Tariff rates and VAT cannot be negative.';
+        if(Number($('vatRate').value)>100) return 'VAT must be between 0% and 100%.';
+        for (const id of ['calorificValue','volumeCorrection']) if(Number($(id).value)<=0) return 'Conversion factors must be greater than zero.';
+        return '';
+      };
+      function calculate(){
+        const message=validate();
+        $('error').textContent=message;
+        $('error').classList.toggle('show',Boolean(message));
+        if(message){
+          show('totalAmount','—'); show('totalBreakdown','—'); show('periodSummary','Enter valid readings and dates');
+          for(const id of ['unitsUsed','kwhUsed','daysBilled','energyCost','standingCost','subtotal','vatCost']) show(id,'—');
+          $('billComparison').hidden=true;
+          return;
+        }
+        const start = Date.parse($('startDate').value + 'T00:00:00Z');
+        const end = Date.parse($('endDate').value + 'T00:00:00Z');
+        const days = Math.round((end-start)/86400000);
+        const units = Number($('endReading').value)-Number($('startReading').value);
+        const type = $('meterType').value;
+        const factor = type==='imperial' ? 2.83 : 1;
+        const correction = Number($('volumeCorrection').value);
+        const cv = Number($('calorificValue').value);
+        const kwh = Math.round((units * factor * correction * cv / 3.6) * 10) / 10;
+        const unitP = Number($('unitRate').value);
+        const dailyP = Number($('standingRate').value);
+        const vatRate = Number($('vatRate').value);
+        const usageCharge = roundPence(kwh * unitP / 100);
+        const standingCharge = roundPence(days * dailyP / 100);
+        const preVAT = roundPence(usageCharge+standingCharge);
+        const vat = roundPence(preVAT*vatRate/100);
+        const total = roundPence(preVAT+vat);
+        show('totalAmount',money(total));
+        show('totalBreakdown',money(total));
+        show('periodSummary',days+' '+(days===1?'day':'days')+' · Including '+numeric(vatRate,3)+'% VAT');
+        show('unitsUsed',numeric(units,2));
+        show('unitsLabel',type==='imperial'?'100s ft³':'m³');
+        show('kwhUsed',numeric(kwh,1));
+        show('daysBilled',String(days));
+        show('energyCost',money(usageCharge));
+        show('standingCost',money(standingCharge));
+        show('subtotal',money(preVAT));
+        show('vatCost',money(vat));
+        show('unitRateDisplay','('+numeric(unitP,5)+'p/kWh)');
+        show('standingRateDisplay','('+numeric(dailyP,5)+'p × '+days+' days)');
+        show('vatRateDisplay','('+numeric(vatRate,3)+'%)');
+        show('formula',(type==='imperial'?'Imperial kWh = units × 2.83':'Metric kWh = units')+' × '+numeric(correction,6)+' × '+numeric(cv,3)+' ÷ 3.6');
+        $('billComparison').hidden = !(fieldIds.every(id => String($(id).value)===String(example[id])));
+      }
+      fieldIds.forEach(id => { $(id).addEventListener('input',calculate); $(id).addEventListener('change',calculate); });
+      $('exampleButton').addEventListener('click',()=>{ for (const id of fieldIds) $(id).value=example[id]; calculate(); });
+      $('clearButton').addEventListener('click',()=>{ $('startReading').value=''; $('endReading').value=''; calculate(); $('startReading').focus(); });
+      $('printButton').addEventListener('click',()=>window.print());
+      calculate();
+    })();
+  </script>
+</body>
+</html>
